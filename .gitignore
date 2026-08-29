@@ -1,0 +1,18 @@
+# Local state, environments, model weights and generated exports
+.venv/
+.venv-*/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.env
+.env.*
+!.env.example
+.moka/
+models/
+vendor/
+node_modules/
+test-results/
+playwright-report/
+.DS_Store
+Thumbs.db
+*.log
