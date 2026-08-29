@@ -1,0 +1,289 @@
+{
+  "preset": "biped",
+  "provenance": "synthetic-ground-truth",
+  "confidence": 1.0,
+  "joints": [
+    {
+      "id": "pelvis",
+      "x": 384.0,
+      "y": 427.88,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "chest",
+      "x": 384.0,
+      "y": 272.36,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "neck",
+      "x": 384.0,
+      "y": 214.04,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "head_tip",
+      "x": 384.0,
+      "y": 81.2,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "shoulder_l",
+      "x": 470.64,
+      "y": 265.88,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "elbow_l",
+      "x": 520.8,
+      "y": 350.12,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "wrist_l",
+      "x": 566.4,
+      "y": 440.84,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "hand_l",
+      "x": 584.64,
+      "y": 479.72,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "shoulder_r",
+      "x": 297.36,
+      "y": 265.88,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "elbow_r",
+      "x": 247.2,
+      "y": 350.12,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "wrist_r",
+      "x": 201.6,
+      "y": 440.84,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "hand_r",
+      "x": 183.36,
+      "y": 479.72,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "hip_l",
+      "x": 429.6,
+      "y": 427.88,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "knee_l",
+      "x": 438.72,
+      "y": 551.0,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "ankle_l",
+      "x": 452.4,
+      "y": 667.64,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "toe_l",
+      "x": 502.56,
+      "y": 693.56,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "hip_r",
+      "x": 338.4,
+      "y": 427.88,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "knee_r",
+      "x": 329.28,
+      "y": 551.0,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "ankle_r",
+      "x": 315.6,
+      "y": 667.64,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    },
+    {
+      "id": "toe_r",
+      "x": 265.44,
+      "y": 693.56,
+      "confidence": 1.0,
+      "source": "synthetic-ground-truth"
+    }
+  ],
+  "bones": [
+    {
+      "id": "root",
+      "parent": null,
+      "start": "pelvis",
+      "end": "pelvis",
+      "layer": false
+    },
+    {
+      "id": "torso",
+      "parent": "root",
+      "start": "pelvis",
+      "end": "chest",
+      "layer": true
+    },
+    {
+      "id": "neck",
+      "parent": "torso",
+      "start": "chest",
+      "end": "neck",
+      "layer": true
+    },
+    {
+      "id": "head",
+      "parent": "neck",
+      "start": "neck",
+      "end": "head_tip",
+      "layer": true
+    },
+    {
+      "id": "collar_r",
+      "parent": "torso",
+      "start": "chest",
+      "end": "shoulder_r",
+      "layer": false
+    },
+    {
+      "id": "upper_arm_r",
+      "parent": "collar_r",
+      "start": "shoulder_r",
+      "end": "elbow_r",
+      "layer": true
+    },
+    {
+      "id": "forearm_r",
+      "parent": "upper_arm_r",
+      "start": "elbow_r",
+      "end": "wrist_r",
+      "layer": true
+    },
+    {
+      "id": "hand_r",
+      "parent": "forearm_r",
+      "start": "wrist_r",
+      "end": "hand_r",
+      "layer": true
+    },
+    {
+      "id": "hip_link_r",
+      "parent": "root",
+      "start": "pelvis",
+      "end": "hip_r",
+      "layer": false
+    },
+    {
+      "id": "thigh_r",
+      "parent": "hip_link_r",
+      "start": "hip_r",
+      "end": "knee_r",
+      "layer": true
+    },
+    {
+      "id": "shin_r",
+      "parent": "thigh_r",
+      "start": "knee_r",
+      "end": "ankle_r",
+      "layer": true
+    },
+    {
+      "id": "foot_r",
+      "parent": "shin_r",
+      "start": "ankle_r",
+      "end": "toe_r",
+      "layer": true
+    },
+    {
+      "id": "collar_l",
+      "parent": "torso",
+      "start": "chest",
+      "end": "shoulder_l",
+      "layer": false
+    },
+    {
+      "id": "upper_arm_l",
+      "parent": "collar_l",
+      "start": "shoulder_l",
+      "end": "elbow_l",
+      "layer": true
+    },
+    {
+      "id": "forearm_l",
+      "parent": "upper_arm_l",
+      "start": "elbow_l",
+      "end": "wrist_l",
+      "layer": true
+    },
+    {
+      "id": "hand_l",
+      "parent": "forearm_l",
+      "start": "wrist_l",
+      "end": "hand_l",
+      "layer": true
+    },
+    {
+      "id": "hip_link_l",
+      "parent": "root",
+      "start": "pelvis",
+      "end": "hip_l",
+      "layer": false
+    },
+    {
+      "id": "thigh_l",
+      "parent": "hip_link_l",
+      "start": "hip_l",
+      "end": "knee_l",
+      "layer": true
+    },
+    {
+      "id": "shin_l",
+      "parent": "thigh_l",
+      "start": "knee_l",
+      "end": "ankle_l",
+      "layer": true
+    },
+    {
+      "id": "foot_l",
+      "parent": "shin_l",
+      "start": "ankle_l",
+      "end": "toe_l",
+      "layer": true
+    }
+  ]
+}

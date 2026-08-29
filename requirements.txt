@@ -1,0 +1,9 @@
+# Core workbench, Python 3.11–3.13. GPU frameworks are deliberately optional.
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+python-multipart>=0.0.12,<1
+numpy>=1.26,<3
+scipy>=1.11,<2
+Pillow>=10.4,<13
+opencv-python-headless>=4.10,<5
+psd-tools>=1.10,<2

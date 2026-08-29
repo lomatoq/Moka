@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#11171d"><title>Moka · Character Lab</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23b9efd1'/%3E%3Cpath d='M7 23V9l9 9 9-9v14' fill='none' stroke='%23192221' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/styles.css">
+<script type="importmap">{"imports":{"three":"__THREE_BASE__/build/three.module.js","three/addons/":"__THREE_BASE__/examples/jsm/"}}</script>
+</head>
+<body>
+<header class="app-header">
+  <a class="brand" href="/" aria-label="Moka home"><span class="brand-symbol">M</span><b>MOKA</b><span class="brand-divider"></span><span class="brand-sub">CHARACTER LAB</span></a>
+  <div class="document-title"><input id="project-name" aria-label="Project name" value="Untitled character" maxlength="100" disabled><span id="save-state">No project</span></div>
+  <div class="header-actions"><span class="local-badge"><i></i> LOCAL</span><button id="projects-button" class="quiet">Projects</button><button id="save-button" class="quiet" disabled>Save</button><button id="export-button" class="primary compact" disabled>Export <span>↗</span></button></div>
+</header>
+<div class="workspace">
+<aside class="workflow-panel">
+  <div class="section-heading">WORKFLOW <span class="version">v0.1</span></div>
+  <section class="workflow-section">
+    <h2><span class="step-number">01</span> Character</h2>
+    <button id="import-character" class="drop-target"><span class="drop-icon">＋</span><strong>Drop your character</strong><small>PNG · JPG · WebP · PSD · .moka</small></button>
+    <input type="file" id="character-file" hidden accept="image/png,image/jpeg,image/webp,.psd,.moka,.zip">
+    <div class="two-buttons"><button id="demo-button">Try demo</button><button id="background-button" disabled title="Requires the optional rembg engine">Remove BG</button></div>
+    <label class="field-label" for="preset">Anatomy scaffold</label>
+    <div class="inline-field"><select id="preset"><option value="biped">Biped · 15 parts</option><option value="creature">Biped + tail</option><option value="quadruped">Quadruped</option></select><button id="apply-preset" title="Replace joints with a scaffold" disabled>Set</button></div>
+    <p class="field-help">A scaffold is not detected anatomy. Move the joints to match your art.</p>
+    <label class="field-label" for="pose-engine">Detect character joints</label>
+    <select id="pose-engine"><option value="browser">MediaPipe · browser / human</option><option value="dwpose">DWPose · local / optional</option></select>
+    <button id="detect-pose" class="wide" disabled>Detect skeleton</button>
+    <p class="field-help">Human detectors may fail on stylized characters and animals. No result is silently replaced with a template.</p>
+  </section>
+  <section class="workflow-section">
+    <h2><span class="step-number">02</span> Separate & rig</h2>
+    <label class="field-label" for="cut-engine">Layer engine</label>
+    <select id="cut-engine"><option value="cpu">Rig-guided · CPU baseline</option><option value="imported">Imported PSD layers</option><option value="sam2">SAM 2 + anatomy</option><option value="seethrough">See-through + anatomy</option><option value="qwen">Qwen Layered + anatomy</option></select>
+    <p id="engine-help" class="field-help">Geometry-guided cut. Extends texture under joints; does not invent hidden anatomy.</p>
+    <label class="range-label" for="padding">Joint overlap <output id="padding-value">18 px</output></label><input id="padding" type="range" min="0" max="64" value="18">
+    <label class="check"><input id="rigid" type="checkbox"> Rigid pieces instead of weighted meshes</label>
+    <button id="cut-button" class="primary wide" disabled><span>✦</span> Separate & build rig</button>
+  </section>
+  <section class="workflow-section">
+    <h2><span class="step-number">03</span> Add movement</h2>
+    <button id="import-motion" class="wide" disabled>↑ Import motion or video</button><input id="motion-file" type="file" hidden accept=".bvh,.fbx,.glb,.gltf,.json,video/mp4,video/webm,video/quicktime">
+    <p class="field-help">BVH · FBX · GLB · motion JSON<br>MP4 / WebM → local pose capture</p>
+    <label class="field-label">Procedural test clips</label>
+    <div class="preset-clips"><button data-motion="idle" disabled>Idle</button><button data-motion="wave" disabled>Wave</button><button data-motion="walk" disabled>Walk</button></div>
+    <div id="clip-list" class="clip-list"><span class="muted">No clips yet</span></div>
+  </section>
+  <div class="sidebar-note"><span>◇</span><div>Your artwork stays on this computer.<br><button id="engines-button" class="text-button">Engines & download status</button></div></div>
+</aside>
+<main class="editor-panel">
+  <div class="editor-toolbar">
+    <div class="tool-group" role="group" aria-label="Editing tool"><button data-tool="rig" class="tool active" title="Move setup joints (V)">↖<span>Rig</span></button><button data-tool="pan" class="tool" title="Pan; also Alt-drag or middle mouse">✥<span>Pan</span></button><button data-tool="brush" class="tool" title="Add visible pixels to the selected layer">◌<span>Paint</span></button><button data-tool="erase" class="tool" title="Erase the selected layer">◇<span>Erase</span></button><button data-tool="bone" class="tool" title="Add a custom bone with two clicks">╱<span>Bone</span></button></div>
+    <div class="view-options"><label><input id="show-bones" type="checkbox" checked> Bones</label><label><input id="show-mesh" type="checkbox"> Mesh</label><label><input id="show-fill" type="checkbox"> Fill</label><button id="fit-button" class="icon-button" title="Fit both views">⛶</button></div>
+  </div>
+  <div id="job-bar" class="job-bar" hidden><div><span id="job-message">Preparing…</span><button id="cancel-job" class="text-button">Cancel</button></div><progress id="job-progress" max="1" value="0"></progress></div>
+  <div class="stages">
+    <section class="stage-pane"><div class="stage-heading"><span><i class="dot original"></i> SOURCE / SETUP</span><span id="source-size">—</span></div><div id="source-stage" class="stage checker"></div><div class="stage-caption" id="source-caption">Drag joints · scroll to zoom · double-click to fit</div></section>
+    <section class="stage-pane"><div class="stage-heading"><span><i class="dot preview"></i> RIGGED / MOTION</span><span id="part-count">NO RIG</span></div><div id="preview-stage" class="stage checker"></div><div class="stage-caption" id="preview-caption">One character. Reusable motion.</div></section>
+    <div id="welcome" class="welcome"><div class="welcome-mark">M</div><p class="eyebrow">FROM STILL ART TO MOVEMENT</p><h1>Give your character<br>a skeleton.</h1><p>Separate the artwork, refine the rig,<br>then bring in a performance.</p><button id="welcome-demo" class="primary">Explore the demo <span>↗</span></button><small>Or drop a character image anywhere</small></div>
+  </div>
+  <section class="timeline">
+    <div class="timeline-toolbar"><div class="transport"><button id="reset-time" title="Back to start" disabled>↤</button><button id="play-button" class="play-button" title="Play / pause (Space)" disabled>▶</button><span id="time-label">0.00 <small>/ 4.00 s</small></span></div><select id="clip-select" aria-label="Active clip"><option value="">Setup pose</option></select><label class="small-check"><input id="play-loop" type="checkbox" checked> Loop</label><select id="speed" aria-label="Playback speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select><button id="add-key" disabled title="Save the current pose as a keyframe">＋ Key</button></div>
+    <div class="timeline-body"><span class="track-label" id="track-name">Bone rotation</span><canvas id="curve-canvas" aria-label="Selected bone animation curve"></canvas></div>
+    <input type="range" id="scrubber" min="0" max="4" step="0.001" value="0" aria-label="Animation time">
+  </section>
+  <footer class="status-bar"><span id="status-message">Ready · local-first animation workbench</span><span id="render-status">Checking renderer</span></footer>
+</main>
+<aside class="inspector-panel">
+  <nav class="inspector-tabs" aria-label="Inspector"><button data-tab="layers" class="active">Layers</button><button data-tab="rig">Rig</button><button data-tab="motion">Motion</button></nav>
+  <div id="layers-panel" class="tab-panel">
+    <div class="panel-heading"><h2>Character layers</h2><span id="layers-count" class="count">0</span></div>
+    <p class="field-help">Back to front. Select a part to inspect its bone, overlap, or visible mask.</p>
+    <div id="layer-list" class="layer-list"><div class="empty-state">Your separated parts<br>will appear here.</div></div>
+    <section id="layer-properties" class="inspector-section" hidden>
+      <label class="field-label" for="layer-name">Part name</label><input id="layer-name" maxlength="100">
+      <label class="field-label" for="layer-bone">Attached to</label><select id="layer-bone"></select>
+      <div class="property-grid"><label>Draw order<input id="layer-order" type="number" min="0" max="1024"></label><label>Opacity<input id="layer-opacity" type="number" min="0" max="1" step=".1"></label></div>
+      <div id="layer-quality" class="quality-note"></div><label class="range-label" for="brush-size">Mask brush <output id="brush-size-value">12 px</output></label><input id="brush-size" type="range" min="2" max="64" value="12">
+      <p class="field-help">Paint edits visible pixels from the source. It does not generate new hidden artwork.</p>
+    </section>
+    <details id="quality-details" class="quality-details"><summary>Decomposition diagnostics</summary><div id="quality-content">No decomposition yet.</div></details>
+  </div>
+  <div id="rig-panel" class="tab-panel" hidden>
+    <div class="panel-heading"><h2>Skeleton</h2><span id="bones-count" class="count">0</span></div><p class="field-help">Setup joints are edited on the left. Pose rotations are previewed on the right.</p>
+    <label class="field-label" for="bone-select">Bone</label><select id="bone-select"></select>
+    <label class="range-label" for="bone-angle">Pose offset <output id="bone-angle-value">0°</output></label><input id="bone-angle" type="range" min="-180" max="180" step=".5" value="0">
+    <div class="two-buttons"><button id="reset-pose" disabled>Reset pose</button><button id="rebuild-mesh" disabled>Rebind meshes</button></div>
+    <div id="bone-info" class="quality-note"></div>
+    <div class="inspector-section"><h3>Custom anatomy</h3><p class="field-help">Tail, wing, horn, long ears: choose a parent bone, use the Bone tool, then click its start and tip in the source view.</p><label class="field-label" for="custom-bone-name">New bone name</label><input id="custom-bone-name" value="tail_extra" maxlength="40" pattern="[a-zA-Z][a-zA-Z0-9_]*"><label class="check"><input id="custom-layer" type="checkbox" checked> Give this bone a separate artwork part</label></div>
+    <div id="joint-info" class="quality-note"></div>
+  </div>
+  <div id="motion-panel" class="tab-panel" hidden>
+    <div class="panel-heading"><h2>Retarget motion</h2><span class="count">2D / 3D</span></div>
+    <div id="motion-summary" class="quality-note">Import a motion file or capture a video to map its joints.</div>
+    <label class="field-label" for="projection">Projection</label><select id="projection"><option value="screen">Observed video 2D (when available)</option><option value="world">Project source 3D</option></select>
+    <label class="range-label" for="yaw">View angle <output id="yaw-value">0°</output></label><input id="yaw" type="range" min="-180" max="180" value="0">
+    <label class="field-label" for="retarget-mode">Pose interpretation</label><select id="retarget-mode"><option value="absolute">Match projected pose</option><option value="relative">Relative to reference frame</option></select>
+    <label class="field-label" for="reference-frame">Reference frame</label><input id="reference-frame" type="number" min="0" value="0">
+    <label class="range-label" for="smoothing">Motion smoothing <output id="smoothing-value">45%</output></label><input id="smoothing" type="range" min="0" max="100" value="45">
+    <div class="check-grid"><label class="check"><input id="mirror-motion" type="checkbox"> Mirror</label><label class="check"><input id="root-motion" type="checkbox"> Root motion</label><label class="check"><input id="foot-lock" type="checkbox"> Foot contact IK</label><label class="check"><input id="close-loop" type="checkbox"> Close loop</label></div>
+    <p class="field-help">Monocular depth is estimated. Loop closure can shift contacts. Review feet and limb crossings before export.</p>
+    <details id="mapping-details"><summary>Joint mapping <span id="mapping-count"></span></summary><div id="mapping-list"></div></details>
+    <button id="retarget-button" class="primary wide" disabled>Apply to character</button><div id="motion-diagnostics" class="quality-note"></div>
+  </div>
+</aside>
+</div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<dialog id="export-dialog"><form method="dialog"><div class="dialog-heading"><div><p class="eyebrow">TAKE IT WITH YOU</p><h2>Export character</h2></div><button class="close-button" aria-label="Close">×</button></div></form><p class="field-help">Exports contain real images, meshes, bones, and animation keys. Review them in the target editor.</p><div class="export-options"><button data-export="spine"><strong>Spine 4.2</strong><span>JSON + atlas + textures + source PNGs</span><b>↗</b></button><button data-export="psd"><strong>Layered PSD</strong><span>Editable, full-size character parts</span><b>↗</b></button><button data-export="layers"><strong>PNG layers</strong><span>Transparent crops + offset manifest</span><b>↗</b></button><button data-export="project"><strong>Moka project</strong><span>Portable source, rig, clips, and settings</span><b>↗</b></button><button data-export="bvh"><strong>2D motion → BVH</strong><span>Planar animation, not reconstructed 3D</span><b>↗</b></button></div><p class="field-help">Spine editing/runtime use is subject to Esoteric Software’s license. This app does not include Spine runtimes.</p></dialog>
+<dialog id="projects-dialog"><form method="dialog"><div class="dialog-heading"><h2>Local projects</h2><button class="close-button" aria-label="Close">×</button></div></form><div id="projects-list"></div></dialog>
+<dialog id="engines-dialog"><form method="dialog"><div class="dialog-heading"><h2>Processing engines</h2><button class="close-button" aria-label="Close">×</button></div></form><div id="engines-list"></div><p class="field-help">Optional engines are installed locally with tools/setup_ai.py. Package availability does not mean model quality or GPU compatibility has been verified. Initial setup downloads dependencies and model weights, never your artwork.</p></dialog>
+<dialog id="capture-dialog"><div class="dialog-heading"><h2 id="capture-title">Extract motion</h2><button id="capture-close" class="close-button" aria-label="Close">×</button></div><video id="capture-video" controls muted playsinline></video><div class="property-grid"><label>Sample rate<select id="capture-fps"><option value="15">15 fps</option><option value="24" selected>24 fps</option><option value="30">30 fps</option></select></label><label>Maximum duration<input id="capture-duration" type="number" value="30" min="1" max="180"></label></div><p class="field-help">Use one visible performer, a fixed camera, and the whole body in frame. The video is processed in your browser, not uploaded.</p><button id="capture-start" class="primary wide">Capture skeleton</button><progress id="capture-progress" value="0" max="1"></progress><p id="capture-status" class="field-help"></p></dialog>
+<dialog id="animation-dialog"><div class="dialog-heading"><h2>Choose source animation</h2><button id="animation-close" class="close-button" aria-label="Close">×</button></div><div id="animation-options"></div></dialog>
+<script type="module" src="/static/app.js"></script>
+</body></html>

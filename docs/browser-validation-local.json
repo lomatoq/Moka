@@ -1,0 +1,14 @@
+{
+  "mode": "source-bundle-real-api",
+  "renderer": "CANVAS \u00b7 SOFTWARE MESHES",
+  "layers": 15,
+  "clips": 2,
+  "tests": [
+    "setup joint persistence",
+    "separation",
+    "multi-bone key editing",
+    "BVH import and retarget",
+    "Spine download"
+  ],
+  "errors": []
+}
