@@ -4,7 +4,9 @@ export class PoseCapture {
   constructor(settings){this.settings=settings;this.pending=new Map();this.counter=0;this.worker=null;this.ready=null;}
   async init(){
     if(this.ready)return this.ready;
-    this.worker=new Worker('/static/pose-worker.js',{type:'module'});
+    // MediaPipe's pinned WASM bootstrap calls importScripts; use a classic worker.
+    // pose-worker.js still loads the public ES module with dynamic import().
+    this.worker=new Worker('/static/pose-worker.js');
     this.worker.onmessage=({data})=>{const item=this.pending.get(data.id);if(!item)return;this.pending.delete(data.id);clearTimeout(item.timer);data.error?item.reject(new Error(data.error)):item.resolve(data.result);};
     this.worker.onerror=e=>{for(const p of this.pending.values()){clearTimeout(p.timer);p.reject(new Error(e.message||'Pose worker could not start'));}this.pending.clear();this.ready=null;};
     this.ready=this.request('init',{settings:this.settings},[],180000).catch(e=>{this.ready=null;throw e;});return this.ready;
