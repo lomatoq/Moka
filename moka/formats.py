@@ -41,8 +41,8 @@ def write_psd(layers: list[tuple[str, Image.Image, tuple[int, int]]], size: tupl
         temp = Image.new("RGBA", size)
         temp.paste(image.convert("RGBA"), (x, y))
         composite = Image.alpha_composite(composite, temp)
-    # PSD records are top-first; our scene order is bottom-first.
-    for name, image, (x, y) in reversed(layers):
+    # PSD records, psd-tools, and our scene all use bottom-first order.
+    for name, image, (x, y) in layers:
         a = np.array(image.convert("RGBA"))
         h, w = a.shape[:2]
         channels = [(0, a[..., 0]), (1, a[..., 1]), (2, a[..., 2]), (-1, a[..., 3])]
@@ -172,7 +172,7 @@ def read_psd_basic(data: bytes):
                 arr[..., target] = (values.astype(np.uint16)*opacity//255).astype(np.uint8) if target == 3 else values
         if lw and lh and np.any(arr[..., 3]) and not flags & 2:
             layers.append((name, Image.fromarray(arr), (x, y)))
-    return list(reversed(layers)), (w, h), warnings
+    return layers, (w, h), warnings
 
 
 def read_psd(data: bytes):

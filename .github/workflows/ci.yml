@@ -12,21 +12,10 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Materialize a checksum-verified initial source delivery
-        if: github.event_name == 'push'
-        run: |
-          if [ -f .moka-delivery/manifest.json ]; then
-            python .moka-delivery/materialize.py
-            git config user.name 'Moka delivery'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add -A
-            git commit -m 'Deliver Moka source, editor, anatomical pipeline, retargeting, and tests'
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
