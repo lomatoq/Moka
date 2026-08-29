@@ -1,0 +1,20 @@
+{
+  "mode": "native-es-modules",
+  "renderer": "WEBGL 2 \u00b7 WEIGHTED MESHES",
+  "layers": 15,
+  "clips": 2,
+  "tests": [
+    "setup joint persistence",
+    "separation",
+    "multi-bone key editing",
+    "BVH import and retarget",
+    "Spine download",
+    "GLTF world-space animation sampling",
+    "GLB world-space animation sampling"
+  ],
+  "errors": [],
+  "informational_stderr": [
+    "INFO: Created TensorFlow Lite XNNPACK delegate for CPU."
+  ],
+  "real_pose_landmarks": 33
+}
