@@ -117,7 +117,16 @@ def run(args):
                     browser=pw.chromium.launch(**options)
                     page=browser.new_page(viewport={'width':1600,'height':1060},device_scale_factor=1,accept_downloads=True)
                     errors=[];page.on('pageerror',lambda error:(errors.append(str(error)),print('PAGEERROR:',error,flush=True)))
-                    page.on('console',lambda msg:(errors.append(msg.text),print('CONSOLE:',msg.text,flush=True)) if msg.type=='error' and 'favicon.ico' not in msg.text else None)
+                    informational_stderr=[]
+                    def console_message(msg):
+                        if msg.type!='error' or 'favicon.ico' in msg.text:return
+                        # The pinned TFLite build emits this success notice through stderr.
+                        # Match exactly: actual inference, WASM, and application errors still fail.
+                        if msg.text.strip()=='INFO: Created TensorFlow Lite XNNPACK delegate for CPU.':
+                            informational_stderr.append(msg.text);print('MODEL INFO:',msg.text,flush=True)
+                        else:
+                            errors.append(msg.text);print('CONSOLE:',msg.text,flush=True)
+                    page.on('console',console_message)
                     if args.source_mode:source_page(page,client,base)
                     else:page.goto(base,wait_until='networkidle')
                     page.locator('#welcome-demo').click();page.wait_for_selector('#welcome',state='hidden')
@@ -172,7 +181,7 @@ def run(args):
                     result={'mode':'source-bundle-real-api' if args.source_mode else 'native-es-modules',
                             'renderer':page.locator('#render-status').inner_text(),'layers':15,'clips':2,
                             'tests':['setup joint persistence','separation','multi-bone key editing','BVH import and retarget','Spine download'],
-                            'errors':errors}
+                            'errors':errors,'informational_stderr':informational_stderr}
                     if args.assets:
                         if args.source_mode:raise ValueError('--assets requires native module loading, not source mode')
                         for binary in (False,True):
