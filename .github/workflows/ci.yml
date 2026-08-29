@@ -1,0 +1,60 @@
+name: Moka validation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Materialize a checksum-verified initial source delivery
+        if: github.event_name == 'push'
+        run: |
+          if [ -f .moka-delivery/manifest.json ]; then
+            python .moka-delivery/materialize.py
+            git config user.name 'Moka delivery'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add -A
+            git commit -m 'Deliver Moka source, editor, anatomical pipeline, retargeting, and tests'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install development dependencies
+        run: python -m pip install -r requirements.txt -r requirements-dev.txt
+      - name: Python and motion invariants
+        run: |
+          python -m pytest -q
+          node --test tests/*.test.mjs
+      - name: Browser dependencies and real model fixture
+        run: |
+          python tools/cache_assets.py
+          python -m playwright install --with-deps chromium
+          mkdir -p test-results
+          curl --fail --location --retry 2 https://storage.googleapis.com/mediapipe-assets/pose.jpg -o test-results/pose.jpg
+      - name: Native web editor, GLTF/GLB, and real pose inference
+        run: python tests/browser_smoke.py --assets --pose-fixture test-results/pose.jpg
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: moka-validation
+          path: |
+            test-results/browser-report.json
+            test-results/preview.png
+            test-results/spine.zip
+            test-results/server.log
